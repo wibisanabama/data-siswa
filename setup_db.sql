@@ -1,0 +1,10 @@
+CREATE DATABASE IF NOT EXISTS latihan_php;
+USE latihan_php;
+
+CREATE TABLE IF NOT EXISTS siswa (
+    id_siswa INT AUTO_INCREMENT PRIMARY KEY,
+    nama VARCHAR(100) NOT NULL,
+    nis VARCHAR(20) NOT NULL,
+    tanggal_lahir DATE NOT NULL,
+    email VARCHAR(100) NOT NULL
+);
