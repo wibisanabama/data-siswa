@@ -146,6 +146,98 @@
             background: #e0e7ff;
             color: var(--primary);
         }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .modal-backdrop.is-open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            width: min(100%, 430px);
+            padding: 2rem;
+            border: 1px solid var(--border);
+            border-radius: 1.5rem;
+            background: var(--card-bg);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+            transform: translateY(12px) scale(0.98);
+            transition: transform 0.2s ease;
+        }
+
+        .modal-backdrop.is-open .modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-icon {
+            display: grid;
+            place-items: center;
+            width: 3.25rem;
+            height: 3.25rem;
+            margin-bottom: 1.25rem;
+            border-radius: 1rem;
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .modal-icon svg {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
+        .modal h2 {
+            margin-bottom: 0.5rem;
+            font-size: 1.35rem;
+        }
+
+        .modal p {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .modal p strong {
+            color: var(--text-main);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.75rem;
+        }
+
+        .btn-secondary {
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
@@ -183,7 +275,9 @@
                         <td><?= $siswa['email']; ?></td>
                         <td class="actions">
                             <a href="edit.php?id_siswa=<?= $siswa['id_siswa']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                            <a href="hapus.php?id=<?= $siswa['id_siswa']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
+                            <button type="button" class="btn btn-sm btn-danger delete-trigger"
+                                data-delete-url="hapus.php?id=<?= $siswa['id_siswa']; ?>"
+                                data-student-name="<?= htmlspecialchars($siswa['nama'], ENT_QUOTES, 'UTF-8'); ?>">Hapus</button>
                         </td>
                     </tr>
                     <?php endwhile; ?>
@@ -191,5 +285,58 @@
             </table>
         </div>
     </div>
+
+    <div class="modal-backdrop" id="deleteModal" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" aria-describedby="deleteModalDescription">
+            <div class="modal-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v5m4-5v5"/>
+                </svg>
+            </div>
+            <h2 id="deleteModalTitle">Hapus data siswa?</h2>
+            <p id="deleteModalDescription">Data <strong id="studentName"></strong> akan dihapus permanen dan tidak dapat dikembalikan.</p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="cancelDelete">Batal</button>
+                <a href="#" class="btn btn-danger" id="confirmDelete">Ya, hapus</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const deleteModal = document.getElementById('deleteModal');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const cancelDelete = document.getElementById('cancelDelete');
+        const studentName = document.getElementById('studentName');
+        let lastTrigger = null;
+
+        function openDeleteModal(trigger) {
+            lastTrigger = trigger;
+            studentName.textContent = trigger.dataset.studentName;
+            confirmDelete.href = trigger.dataset.deleteUrl;
+            deleteModal.classList.add('is-open');
+            deleteModal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+            cancelDelete.focus();
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.remove('is-open');
+            deleteModal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+            if (lastTrigger) lastTrigger.focus();
+        }
+
+        document.querySelectorAll('.delete-trigger').forEach((trigger) => {
+            trigger.addEventListener('click', () => openDeleteModal(trigger));
+        });
+
+        cancelDelete.addEventListener('click', closeDeleteModal);
+        deleteModal.addEventListener('click', (event) => {
+            if (event.target === deleteModal) closeDeleteModal();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && deleteModal.classList.contains('is-open')) closeDeleteModal();
+        });
+    </script>
 </body>
 </html>
